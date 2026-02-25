@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pending Offer Letters | ECE</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"> <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --wa-color: #10b981;
+            --border-light: #e2e8f0;
+            --search-bg: #f1f5f9;
+            --base-font-size: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+            --radius-lg: 24px;
+        }
+
+        /* Eye Protection Mode */
+        body.eye-protection {
+            --bg-color: #fbf5eb;
+            --text-main: #433422;
+            --text-muted: #85725a;
+            --card-bg: #fdfaf6;
+            --primary: #b48550;
+            --wa-color: #7b9e6b;
+            --border-light: #e8dbce;
+            --search-bg: #f2e8da;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: var(--base-font-size);
+            transition: background-color 0.4s ease, color 0.4s ease;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Initial Selection Overlay */
+        .selection-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .selection-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .selection-modal {
+            background-color: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        .selection-overlay.active .selection-modal {
+            transform: translateY(0);
+        }
+
+        .selection-modal h2 {
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            color: var(--text-main);
+        }
+
+        .batch-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 2px solid transparent;
+            background: linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+                        linear-gradient(135deg, #667eea, #764ba2) border-box;
+            color: var(--primary);
+            border-radius: var(--radius-md);
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .batch-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .batch-btn:hover::before {
+            left: 0;
+        }
+
+        .batch-btn:hover {
+            color: rgb(255, 128, 0);
+        }
+
+        /* Main App Header */
+        header {
+            background-color: var(--bg-color);
+            padding: 20px 20px 10px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .header-titles {
+            flex: 1;
+            padding-right: 15px;
+        }
+
+        h1 {
+            font-size: 1.4em;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--primary);
+            margin-bottom: 6px;
+            line-height: 1.2;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .dept-title {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .batch-info-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .batch-title {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            font-weight: 500;
+            background: var(--search-bg);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .switch-batch-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toggle-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            color: var(--text-muted);
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        body.eye-protection .toggle-btn {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        .controls span {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--primary);
+        }
+
+        /* NEW Filters Section */
+        .filters-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filters-row select {
+            flex: 1;
+            min-width: 0;
+            padding: 12px;
+            padding-right: 15px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            background-color: var(--search-bg);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.9em;
+            font-weight: 500;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 10px auto;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-container svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 14px 14px 14px 40px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            font-size: 1em;
+            background-color: var(--search-bg);
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .search-container input:focus {
+            background-color: var(--card-bg);
+            border-color: var(--primary);
+        }
+
+        main {
+            padding: 10px 20px 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        #resultsList {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-item {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .list-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background-color: var(--search-bg);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+
+        .info {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .list-item strong {
+            display: block;
+            font-size: 1.05em;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .list-item span {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            display: block;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Bottom Sheet Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: flex-end;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            width: 100%;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            padding: 20px 24px 30px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .drag-handle {
+            width: 40px;
+            height: 4px;
+            background-color: var(--border-light);
+            border-radius: 4px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            gap: 15px;
+        }
+
+        .modal-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .modal-avatar {
+            width: 56px;
+            height: 56px;
+            font-size: 1.4em;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--text-main);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .modal-header p {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-top: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .close-btn {
+            background: var(--search-bg);
+            border: none;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .profile-details {
+            background: var(--search-bg);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-row:first-child {
+            padding-top: 0;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 1.05em;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Value & Copy Button alignment */
+        .value-copy-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Quick Copy Button */
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover, .copy-btn:active {
+            background: var(--border-light);
+            color: var(--primary);
+        }
+
+        .copy-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .phone-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .phone-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .btn-call { background-color: var(--primary); }
+        .btn-wa { background-color: var(--wa-color); }
+
+        /* Watermark */
+        .watermark {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.85em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .watermark-text {
+            font-weight: 500;
+        }
+
+        .watermark-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .loading-text {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 1.1em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .mobile-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .mobile-action-btn { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s; }
+        .mobile-action-btn:active { transform: scale(0.95); }
+        .share-btn { background: var(--primary); color: white; }
+        .vcard-btn { background: var(--wa-color); color: white; }
+
+        .favorite-btn { background: none; border: none; cursor: pointer; padding: 8px; border-radius: 50%; transition: all 0.2s; flex-shrink: 0; }
+        .favorite-btn:hover { background: var(--search-bg); }
+        .favorite-btn svg { width: 24px; height: 24px; }
+        .favorite-btn.active svg { fill: #ef4444; stroke: #ef4444; }
+        .favorite-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid var(--card-bg); }
+
+        @media (max-width: 768px) {
+            .modal-header { gap: 8px; }
+            .modal-profile { gap: 12px; }
+            .modal-avatar { width: 48px; height: 48px; font-size: 1.2em; }
+            .modal-header h2 { font-size: 1.1em; }
+            .modal-header p { font-size: 0.85em; }
+            .close-btn, .favorite-btn { width: 36px; height: 36px; padding: 6px; }
+            .favorite-btn svg, .close-btn svg { width: 20px; height: 20px; }
+            .filters-row select { font-size: 0.85em; padding: 10px; padding-right: 28px; }
+            .mobile-action-btn { padding: 10px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="selection-overlay active" id="selectionOverlay">
+        <div class="selection-modal">
+            <h2>Select Academic Year</h2>
+            <button class="batch-btn" data-batch="2022-2023">Batch 2022 - 2023</button>
+            <button class="batch-btn" data-batch="2021-2022">Batch 2021 - 2022</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-top">
+            <div class="header-titles">
+                <h1>Students Not Submitted Their Offer Letters</h1>
+                <p class="dept-title">DEPARTMENT OF ELECTRONICS & COMMUNICATIONS</p>
+                <div class="batch-info-container">
+                    <p class="batch-title" id="displayBatchTitle">No Batch Selected</p>
+                    <button class="switch-batch-btn" id="switchBatchBtn">
+                        <svg viewBox="0 0 24 24" style="width:14px; height:14px;">
+                            <polyline points="16 3 21 3 21 8"></polyline>
+                            <line x1="4" y1="14" x2="21" y2="3"></line>
+                            <polyline points="8 21 3 21 3 16"></polyline>
+                            <line x1="20" y1="10" x2="3" y2="21"></line>
+                        </svg>
+                        Switch
+                    </button>
+                </div>
+            </div>
+            <button id="eyeModeBtn" class="toggle-btn" aria-label="Toggle Eye Protection">
+                <svg id="themeIcon" viewBox="0 0 24 24">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="controls">
+            <span>A-</span>
+            <input type="range" id="fontSlider" min="14" max="22" value="16">
+            <span>A+</span>
+        </div>
+
+        <div class="filters-row">
+            <select id="sortSelect">
+                <option value="name_asc">Sort: A - Z</option>
+                <option value="roll_asc">Sort: Roll No.</option>
+            </select>
+            <select id="orgSelect">
+                <option value="all">All Companies</option>
+            </select>
+            <select id="favFilter">
+                <option value="all">All Contacts</option>
+                <option value="favorites">❤️ Favorites</option>
+            </select>
+        </div>
+
+        <div class="search-container">
+            <svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search by name..." autocomplete="off">
+        </div>
+    </header>
+
+    <main>
+        <ul id="resultsList"></ul>
+        <div class="watermark">
+            <p class="watermark-text">Created by <span class="watermark-name">Arjun Mitra</span></p>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content" id="modalContent">
+            <div class="drag-handle"></div>
+            
+            <div class="modal-header">
+                <div class="modal-profile">
+                    <div class="avatar modal-avatar" id="modalAvatar">A</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <h2 id="modalName">Name</h2>
+                        <p id="modalOrg">Organization</p>
+                    </div>
+                </div>
+                <button class="favorite-btn" id="favoriteBtn" style="display:none;">
+                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                </button>
+                <button class="close-btn" id="closeModal">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="profile-details">
+                <div class="detail-row" style="display: flex;">
+                    <span class="detail-label">Univ. Roll No</span>
+                    <div class="value-copy-group">
+                        <span class="detail-value" id="modalRoll"></span>
+                        <button class="copy-btn" id="copyRollBtn" title="Copy Roll Number">
+                            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="detail-row phone-row" id="phone1Container">
+                    <div class="phone-info">
+                        <span class="detail-label">Mobile 1</span>
+                        <div class="value-copy-group">
+                            <span class="detail-value" id="modalPhone1"></span>
+                            <button class="copy-btn" id="copyPhone1Btn" title="Copy Number">
+                                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="phone-actions">
+                        <a href="#" id="callBtn1" class="icon-btn btn-call"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></a>
+                        <a href="#" id="waBtn1" class="icon-btn btn-wa" target="_blank"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
+                    </div>
+                </div>
+
+                <div class="detail-row phone-row" id="phone2Container">
+                    <div class="phone-info">
+                        <span class="detail-label">Mobile 2</span>
+                        <div class="value-copy-group">
+                            <span class="detail-value" id="modalPhone2"></span>
+                            <button class="copy-btn" id="copyPhone2Btn" title="Copy Number">
+                                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="phone-actions">
+                        <a href="#" id="callBtn2" class="icon-btn btn-call"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></a>
+                        <a href="#" id="waBtn2" class="icon-btn btn-wa" target="_blank"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PWA Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('SW registered: ', registration);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
+
+        const SHEET_URLS = {
+            '2022-2023': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSUzVEEzZbhMRT6VGuIr5vEXKm13Fju36OSqYsH-DTe6sscldrJfdSqvAa1SJe6HuQ8NGSoy3vMbBls/pub?gid=0&single=true&output=csv',
+            '2021-2022': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSUzVEEzZbhMRT6VGuIr5vEXKm13Fju36OSqYsH-DTe6sscldrJfdSqvAa1SJe6HuQ8NGSoy3vMbBls/pub?gid=566406432&single=true&output=csv'
+        };
+
+        const parseCSV = (csvStr) => {
+            const rows = csvStr.split('\n').filter(line => line.trim() !== '');
+            const data = [];
+            for(let i = 0; i < rows.length; i++) {
+                const parts = rows[i].replace(/\r/g, '').split(','); 
+                if(i === 0 && parts[0].toLowerCase().includes('name')) continue;
+
+                data.push({ 
+                    name: parts[0] ? parts[0].trim() : '', 
+                    roll: parts[1] ? parts[1].trim() : '', 
+                    phone1: parts[2] ? parts[2].trim() : '', 
+                    phone2: parts[3] ? parts[3].trim() : '', 
+                    org: parts[4] ? parts[4].trim() : '' 
+                });
+            }
+            return data;
+        };
+
+        let currentData = [];
+        let currentBatch = null;
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const resultsList = document.getElementById('resultsList');
+        const fontSlider = document.getElementById('fontSlider');
+        const eyeModeBtn = document.getElementById('eyeModeBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const closeModal = document.getElementById('closeModal');
+        const phone2Container = document.getElementById('phone2Container');
+        const selectionOverlay = document.getElementById('selectionOverlay');
+        const displayBatchTitle = document.getElementById('displayBatchTitle');
+        const switchBatchBtn = document.getElementById('switchBatchBtn');
+        const batchButtons = document.querySelectorAll('.batch-btn');
+        const sortSelect = document.getElementById('sortSelect');
+        const orgSelect = document.getElementById('orgSelect');
+        const favFilter = document.getElementById('favFilter');
+
+        // Helpers
+        const getInitials = (name) => {
+            if(!name) return '?';
+            const parts = name.split(' ');
+            if (parts.length > 1) return (parts[0][0] + parts[1][0]).toUpperCase();
+            return name[0].toUpperCase();
+        };
+
+        const copyToClipboard = async (text, btnElement) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalSVG = btnElement.innerHTML;
+                btnElement.innerHTML = '<svg viewBox="0 0 24 24" style="stroke: var(--wa-color);"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                setTimeout(() => btnElement.innerHTML = originalSVG, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        };
+
+        // Populate Organization Filter Dropdown
+        function populateOrgDropdown(data) {
+            const orgs = new Set();
+            data.forEach(p => {
+                if(p.org) {
+                    // Split companies by slash (/)
+                    p.org.split('/').forEach(company => {
+                        const cleanStr = company.trim();
+                        if(cleanStr && cleanStr.toLowerCase() !== 'n/a') {
+                            orgs.add(cleanStr);
+                        }
+                    });
+                }
+            });
+
+            orgSelect.innerHTML = '<option value="all">All Companies</option>';
+            Array.from(orgs).sort().forEach(org => {
+                orgSelect.innerHTML += `<option value="${org}">${org}</option>`;
+            });
+        }
+
+        // Apply Filters, Sorting, and Rendering
+        function applyFiltersAndRender() {
+            let filtered = currentData;
+            
+            // 1. Search Query
+            const query = searchInput.value.toLowerCase();
+            if(query) {
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(query));
+            }
+
+            // 2. Organization Filter
+            const selectedOrg = orgSelect.value;
+            if(selectedOrg !== 'all') {
+                filtered = filtered.filter(p => p.org.toLowerCase().includes(selectedOrg.toLowerCase()));
+            }
+
+            // 2.5 Favorites Filter
+            if(favFilter.value === 'favorites') {
+                filtered = filtered.filter(p => favorites.includes(p.roll));
+            }
+
+            // 3. Sorting
+            const sortVal = sortSelect.value;
+            filtered.sort((a, b) => {
+                if(sortVal === 'name_asc') return a.name.localeCompare(b.name);
+                if(sortVal === 'roll_asc') return a.roll.localeCompare(b.roll, undefined, {numeric: true});
+                return 0;
+            });
+
+            // 4. Render
+            resultsList.innerHTML = '';
+            if (filtered.length === 0) {
+                resultsList.innerHTML = '<li style="text-align:center; padding: 30px; color: var(--text-muted);">No contacts found</li>';
+                return;
+            }
+            
+            filtered.forEach((person) => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.style.position = 'relative';
+                const initials = getInitials(person.name);
+                const displayOrg = person.org ? person.org : 'No Organization Listed';
+                const isFav = favorites.includes(person.roll);
+
+                li.innerHTML = `
+                    ${isFav ? '<div class="favorite-badge"></div>' : ''}
+                    <div class="avatar">${initials}</div>
+                    <div class="info">
+                        <strong>${person.name}</strong>
+                        <span>${displayOrg}</span>
+                    </div>
+                `;
+                li.onclick = () => openProfileModal(person, initials, displayOrg);
+                resultsList.appendChild(li);
+            });
+        }
+
+        // Setup Copy Listeners
+        document.getElementById('copyRollBtn').onclick = () => copyToClipboard(document.getElementById('modalRoll').textContent, document.getElementById('copyRollBtn'));
+        document.getElementById('copyPhone1Btn').onclick = () => copyToClipboard(document.getElementById('modalPhone1').textContent, document.getElementById('copyPhone1Btn'));
+        document.getElementById('copyPhone2Btn').onclick = () => copyToClipboard(document.getElementById('modalPhone2').textContent, document.getElementById('copyPhone2Btn'));
+
+        // Event Listeners for Filters
+        searchInput.addEventListener('input', applyFiltersAndRender);
+        sortSelect.addEventListener('change', applyFiltersAndRender);
+        orgSelect.addEventListener('change', applyFiltersAndRender);
+        favFilter.addEventListener('change', applyFiltersAndRender);
+
+        // Fetch Live Data
+        batchButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const selectedBatch = e.target.getAttribute('data-batch');
+                currentBatch = selectedBatch;
+                
+                selectionOverlay.classList.remove('active');
+                displayBatchTitle.textContent = `Batch ${selectedBatch}`;
+                searchInput.value = ''; 
+                orgSelect.value = 'all';
+                sortSelect.value = 'name_asc';
+
+                resultsList.innerHTML = `
+                    <div class="loading-text">
+                        <div class="spinner"></div>
+                        Fetching live data...
+                    </div>
+                `;
+
+                try {
+                    const response = await fetch(SHEET_URLS[selectedBatch]);
+                    if (!response.ok) throw new Error('Network error');
+                    
+                    const csvText = await response.text();
+                    currentData = parseCSV(csvText);
+                    
+                    populateOrgDropdown(currentData);
+                    applyFiltersAndRender();
+
+                } catch (error) {
+                    console.error(error);
+                    resultsList.innerHTML = `
+                        <div class="loading-text" style="color: #ef4444;">
+                            Failed to load data. Please check internet connection or Google Sheets Link.
+                        </div>
+                    `;
+                }
+            });
+        });
+
+        // Modal Logic
+        switchBatchBtn.addEventListener('click', () => {
+            selectionOverlay.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        function openProfileModal(person, initials, org) {
+            document.getElementById('modalAvatar').textContent = initials;
+            document.getElementById('modalName').textContent = person.name;
+            document.getElementById('modalOrg').textContent = org;
+            document.getElementById('modalRoll').textContent = person.roll;
+            
+            document.getElementById('modalPhone1').textContent = person.phone1;
+            document.getElementById('callBtn1').href = `tel:${person.phone1}`;
+            document.getElementById('waBtn1').href = `https://wa.me/91${person.phone1}`;
+
+            if (person.phone2 && person.phone2.trim() !== '') {
+                document.getElementById('modalPhone2').textContent = person.phone2;
+                document.getElementById('callBtn2').href = `tel:${person.phone2}`;
+                document.getElementById('waBtn2').href = `https://wa.me/91${person.phone2}`;
+                phone2Container.style.display = 'flex';
+            } else {
+                phone2Container.style.display = 'none';
+            }
+
+            modalOverlay.classList.add('active');
+            addMobileActions(person);
+            addFavoriteButton(person);
+        }
+
+        function hideModal() { modalOverlay.classList.remove('active'); }
+        closeModal.addEventListener('click', hideModal);
+        modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) hideModal(); });
+
+        fontSlider.addEventListener('input', (e) => {
+            document.documentElement.style.setProperty('--base-font-size', e.target.value + 'px');
+        });
+
+        const moonSvg = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+        const sunSvg = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+
+        eyeModeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('eye-protection');
+            if(document.body.classList.contains('eye-protection')) themeIcon.innerHTML = sunSvg;
+            else themeIcon.innerHTML = moonSvg;
+        });
+
+        // Mobile Enhancements
+        let pullStartY = 0, pullDistance = 0, isPulling = false;
+        const main = document.querySelector('main');
+
+        document.addEventListener('touchstart', (e) => {
+            if (window.scrollY === 0 && currentData.length > 0) {
+                pullStartY = e.touches[0].clientY;
+                isPulling = true;
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isPulling) return;
+            pullDistance = e.touches[0].clientY - pullStartY;
+            if (pullDistance > 0 && pullDistance < 100) {
+                e.preventDefault();
+                main.style.transform = `translateY(${pullDistance * 0.5}px)`;
+            }
+        });
+
+        document.addEventListener('touchend', async () => {
+            if (isPulling && pullDistance > 60) {
+                await refreshData();
+            }
+            isPulling = false;
+            pullDistance = 0;
+            main.style.transform = '';
+        });
+
+        async function refreshData() {
+            if (!currentBatch) return;
+            try {
+                const response = await fetch(SHEET_URLS[currentBatch]);
+                const csvText = await response.text();
+                currentData = parseCSV(csvText);
+                applyFiltersAndRender();
+            } catch (error) {
+                console.error('Refresh failed:', error);
+            }
+        }
+
+        async function shareContact(person) {
+            if (!navigator.share) return;
+            try {
+                await navigator.share({
+                    title: person.name,
+                    text: `${person.name}\nRoll: ${person.roll}\nPhone: ${person.phone1}\nOrg: ${person.org}`,
+                });
+            } catch (err) {}
+        }
+
+        function generateVCard(person) {
+            const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${person.name}\nTEL;TYPE=CELL:${person.phone1}\n${person.phone2 ? `TEL;TYPE=CELL:${person.phone2}\n` : ''}ORG:${person.org}\nNOTE:Roll No: ${person.roll}\nEND:VCARD`;
+            const blob = new Blob([vcard], { type: 'text/vcard' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${person.name.replace(/\s+/g, '_')}.vcf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function addMobileActions(person) {
+            const existingActions = document.querySelector('.mobile-actions');
+            if (existingActions) existingActions.remove();
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'mobile-actions';
+            actionsDiv.innerHTML = `
+                <button class="mobile-action-btn share-btn">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    Share
+                </button>
+                <button class="mobile-action-btn vcard-btn">
+                    <svg viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                    Add Contact
+                </button>
+            `;
+            
+            document.querySelector('.profile-details').appendChild(actionsDiv);
+            document.querySelector('.share-btn').onclick = () => shareContact(person);
+            document.querySelector('.vcard-btn').onclick = () => generateVCard(person);
+        }
+
+        function toggleFavorite(roll) {
+            const index = favorites.indexOf(roll);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(roll);
+            }
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            applyFiltersAndRender();
+        }
+
+        function addFavoriteButton(person) {
+            const btn = document.getElementById('favoriteBtn');
+            const isFav = favorites.includes(person.roll);
+            
+            btn.className = `favorite-btn ${isFav ? 'active' : ''}`;
+            btn.style.display = 'flex';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                toggleFavorite(person.roll);
+                btn.classList.toggle('active');
+            };
+        }
+    </script>
+</body>
+</html>
