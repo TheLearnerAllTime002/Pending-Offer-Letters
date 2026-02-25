@@ -665,6 +665,43 @@
         .favorite-btn.active svg { fill: #ef4444; stroke: #ef4444; }
         .favorite-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid var(--card-bg); }
 
+        /* Status Badges */
+        .status-badge { font-size: 0.75em; padding: 4px 10px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .status-badge svg { width: 12px; height: 12px; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-contacted { background: #dbeafe; color: #1e40af; }
+        .status-submitted { background: #d1fae5; color: #065f46; }
+        .status-selector { display: flex; gap: 8px; }
+        .status-btn { flex: 1; padding: 10px; border: 2px solid var(--border-light); background: var(--card-bg); border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .status-btn svg { width: 16px; height: 16px; }
+        .status-btn:hover { transform: translateY(-2px); }
+        .status-btn.pending { border-color: #fbbf24; color: #92400e; }
+        .status-btn.pending.active { background: #fef3c7; }
+        .status-btn.contacted { border-color: #60a5fa; color: #1e40af; }
+        .status-btn.contacted.active { background: #dbeafe; }
+        .status-btn.submitted { border-color: #34d399; color: #065f46; }
+        .status-btn.submitted.active { background: #d1fae5; }
+
+        /* Offline & Timestamp Indicator */
+        .offline-indicator { position: fixed; bottom: 20px; right: 20px; background: #ef4444; color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85em; font-weight: 600; z-index: 50; display: none; box-shadow: var(--shadow-lg); }
+        .offline-indicator.show { display: block; }
+        .last-updated { font-size: 0.75em; color: var(--text-muted); text-align: center; padding: 8px; margin-top: 10px; }
+        .sync-icon { display: inline-block; animation: rotate 1s linear infinite; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        /* Notes & Follow-up */
+        .notes-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-light); }
+        .notes-textarea { width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--border-light); border-radius: 10px; font-family: inherit; font-size: 0.9em; background: var(--card-bg); color: var(--text-main); resize: vertical; outline: none; }
+        .notes-textarea:focus { border-color: var(--primary); }
+        .notes-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .save-note-btn { flex: 1; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .save-note-btn:active { transform: scale(0.98); }
+        .followup-date { flex: 1; padding: 10px; border: 1px solid var(--border-light); border-radius: 10px; font-family: inherit; font-size: 0.9em; background: var(--card-bg); color: var(--text-main); }
+        .followup-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75em; padding: 4px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; margin-top: 4px; }
+        .followup-badge svg { width: 12px; height: 12px; }
+        .followup-badge.overdue { background: #fee2e2; color: #991b1b; }
+        .note-indicator { position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; border: 2px solid var(--card-bg); }
+
         @media (max-width: 768px) {
             .modal-header { gap: 8px; }
             .modal-profile { gap: 12px; }
@@ -733,6 +770,12 @@
                 <option value="all">All Contacts</option>
                 <option value="favorites">❤️ Favorites</option>
             </select>
+            <select id="statusFilter">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="contacted">Contacted</option>
+                <option value="submitted">Submitted</option>
+            </select>
         </div>
 
         <div class="search-container">
@@ -742,7 +785,10 @@
             </svg>
             <input type="text" id="searchInput" placeholder="Search by name..." autocomplete="off">
         </div>
+        <div class="last-updated" id="lastUpdated"></div>
     </header>
+
+    <div class="offline-indicator" id="offlineIndicator">📡 Offline Mode</div>
 
     <main>
         <ul id="resultsList"></ul>
@@ -816,6 +862,23 @@
                         <a href="#" id="waBtn2" class="icon-btn btn-wa" target="_blank"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
                     </div>
                 </div>
+
+                <div class="detail-row" style="display: block; padding: 16px 0 0 0; border: none;">
+                    <span class="detail-label" style="margin-bottom: 12px;">Submission Status</span>
+                    <div class="status-selector" style="margin-top: 0; padding-top: 0; border: none;" id="statusSelectorContainer"></div>
+                </div>
+
+                <div class="notes-section">
+                    <span class="detail-label" style="margin-bottom: 8px; display: block;">Personal Notes</span>
+                    <textarea class="notes-textarea" id="notesTextarea" placeholder="Add notes about this student..."></textarea>
+                    <div class="notes-actions">
+                        <input type="date" class="followup-date" id="followupDate" placeholder="Follow-up date">
+                        <button class="save-note-btn" id="saveNoteBtn">
+                            <svg viewBox="0 0 24 24" style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                            Save
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -860,6 +923,12 @@
         let currentData = [];
         let currentBatch = null;
         let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        let statuses = JSON.parse(localStorage.getItem('statuses') || '{}');
+        let cachedData = JSON.parse(localStorage.getItem('cachedData') || '{}');
+        let lastUpdated = JSON.parse(localStorage.getItem('lastUpdated') || '{}');
+        let studentCounts = JSON.parse(localStorage.getItem('studentCounts') || '{}');
+        let notes = JSON.parse(localStorage.getItem('notes') || '{}');
+        let followupDates = JSON.parse(localStorage.getItem('followupDates') || '{}');
 
         // DOM Elements
         const searchInput = document.getElementById('searchInput');
@@ -877,6 +946,18 @@
         const sortSelect = document.getElementById('sortSelect');
         const orgSelect = document.getElementById('orgSelect');
         const favFilter = document.getElementById('favFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const offlineIndicator = document.getElementById('offlineIndicator');
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+
+        // Offline Detection
+        window.addEventListener('online', () => offlineIndicator.classList.remove('show'));
+        window.addEventListener('offline', () => offlineIndicator.classList.add('show'));
+
+        // Request Notification Permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
 
         // Helpers
         const getInitials = (name) => {
@@ -896,6 +977,42 @@
                 console.error('Failed to copy: ', err);
             }
         };
+
+        // Show Notification
+        function showNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' });
+            }
+        }
+
+        // Update Last Updated Timestamp
+        function updateTimestamp(batch) {
+            const now = new Date();
+            lastUpdated[batch] = now.toISOString();
+            localStorage.setItem('lastUpdated', JSON.stringify(lastUpdated));
+            displayTimestamp(batch);
+        }
+
+        function displayTimestamp(batch) {
+            if (lastUpdated[batch]) {
+                const date = new Date(lastUpdated[batch]);
+                const timeAgo = getTimeAgo(date);
+                lastUpdatedEl.innerHTML = `Last updated: ${timeAgo}`;
+            } else {
+                lastUpdatedEl.innerHTML = '';
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
 
         // Populate Organization Filter Dropdown
         function populateOrgDropdown(data) {
@@ -939,6 +1056,11 @@
                 filtered = filtered.filter(p => favorites.includes(p.roll));
             }
 
+            // 2.6 Status Filter
+            if(statusFilter.value !== 'all') {
+                filtered = filtered.filter(p => (statuses[p.roll] || 'pending') === statusFilter.value);
+            }
+
             // 3. Sorting
             const sortVal = sortSelect.value;
             filtered.sort((a, b) => {
@@ -961,13 +1083,26 @@
                 const initials = getInitials(person.name);
                 const displayOrg = person.org ? person.org : 'No Organization Listed';
                 const isFav = favorites.includes(person.roll);
+                const status = statuses[person.roll] || 'pending';
+                const hasNote = notes[person.roll] && notes[person.roll].trim() !== '';
+                const followupDate = followupDates[person.roll];
+                const isOverdue = followupDate && new Date(followupDate) < new Date();
+                const statusIcons = {
+                    pending: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+                    contacted: '<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>',
+                    submitted: '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+                };
+                const statusLabels = { pending: 'Pending', contacted: 'Contacted', submitted: 'Submitted' };
 
                 li.innerHTML = `
                     ${isFav ? '<div class="favorite-badge"></div>' : ''}
+                    ${hasNote ? '<div class="note-indicator"></div>' : ''}
                     <div class="avatar">${initials}</div>
                     <div class="info">
                         <strong>${person.name}</strong>
                         <span>${displayOrg}</span>
+                        <span class="status-badge status-${status}">${statusIcons[status]}${statusLabels[status]}</span>
+                        ${followupDate ? `<span class="followup-badge ${isOverdue ? 'overdue' : ''}"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>${isOverdue ? 'Overdue' : 'Follow-up: ' + new Date(followupDate).toLocaleDateString()}</span>` : ''}
                     </div>
                 `;
                 li.onclick = () => openProfileModal(person, initials, displayOrg);
@@ -985,6 +1120,7 @@
         sortSelect.addEventListener('change', applyFiltersAndRender);
         orgSelect.addEventListener('change', applyFiltersAndRender);
         favFilter.addEventListener('change', applyFiltersAndRender);
+        statusFilter.addEventListener('change', applyFiltersAndRender);
 
         // Fetch Live Data
         batchButtons.forEach(btn => {
@@ -998,6 +1134,14 @@
                 orgSelect.value = 'all';
                 sortSelect.value = 'name_asc';
 
+                // Try to load cached data first
+                if (cachedData[selectedBatch]) {
+                    currentData = cachedData[selectedBatch];
+                    populateOrgDropdown(currentData);
+                    applyFiltersAndRender();
+                    displayTimestamp(selectedBatch);
+                }
+
                 resultsList.innerHTML = `
                     <div class="loading-text">
                         <div class="spinner"></div>
@@ -1010,18 +1154,42 @@
                     if (!response.ok) throw new Error('Network error');
                     
                     const csvText = await response.text();
-                    currentData = parseCSV(csvText);
+                    const newData = parseCSV(csvText);
                     
+                    // Check for new students
+                    const oldCount = studentCounts[selectedBatch] || 0;
+                    const newCount = newData.length;
+                    if (newCount > oldCount && oldCount > 0) {
+                        const diff = newCount - oldCount;
+                        showNotification('New Students Added!', `${diff} new student(s) added to ${selectedBatch}`);
+                    }
+                    
+                    // Update cache and counts
+                    currentData = newData;
+                    cachedData[selectedBatch] = newData;
+                    studentCounts[selectedBatch] = newCount;
+                    localStorage.setItem('cachedData', JSON.stringify(cachedData));
+                    localStorage.setItem('studentCounts', JSON.stringify(studentCounts));
+                    
+                    updateTimestamp(selectedBatch);
                     populateOrgDropdown(currentData);
                     applyFiltersAndRender();
 
                 } catch (error) {
                     console.error(error);
-                    resultsList.innerHTML = `
-                        <div class="loading-text" style="color: #ef4444;">
-                            Failed to load data. Please check internet connection or Google Sheets Link.
-                        </div>
-                    `;
+                    if (cachedData[selectedBatch]) {
+                        currentData = cachedData[selectedBatch];
+                        populateOrgDropdown(currentData);
+                        applyFiltersAndRender();
+                        displayTimestamp(selectedBatch);
+                        resultsList.insertAdjacentHTML('afterbegin', '<div style="text-align:center; padding: 10px; color: #f59e0b; font-size: 0.9em;">Showing cached data (offline)</div>');
+                    } else {
+                        resultsList.innerHTML = `
+                            <div class="loading-text" style="color: #ef4444;">
+                                Failed to load data. Please check internet connection or Google Sheets Link.
+                            </div>
+                        `;
+                    }
                 }
             });
         });
@@ -1054,6 +1222,8 @@
             modalOverlay.classList.add('active');
             addMobileActions(person);
             addFavoriteButton(person);
+            addStatusSelector(person);
+            loadNotes(person);
         }
 
         function hideModal() { modalOverlay.classList.remove('active'); }
@@ -1107,7 +1277,22 @@
             try {
                 const response = await fetch(SHEET_URLS[currentBatch]);
                 const csvText = await response.text();
-                currentData = parseCSV(csvText);
+                const newData = parseCSV(csvText);
+                
+                // Check for new students
+                const oldCount = studentCounts[currentBatch] || 0;
+                const newCount = newData.length;
+                if (newCount > oldCount && oldCount > 0) {
+                    const diff = newCount - oldCount;
+                    showNotification('New Students Added!', `${diff} new student(s) added to ${currentBatch}`);
+                }
+                
+                currentData = newData;
+                cachedData[currentBatch] = newData;
+                studentCounts[currentBatch] = newCount;
+                localStorage.setItem('cachedData', JSON.stringify(cachedData));
+                localStorage.setItem('studentCounts', JSON.stringify(studentCounts));
+                updateTimestamp(currentBatch);
                 applyFiltersAndRender();
             } catch (error) {
                 console.error('Refresh failed:', error);
@@ -1180,6 +1365,103 @@
                 btn.classList.toggle('active');
             };
         }
+
+        function setStatus(roll, status) {
+            statuses[roll] = status;
+            localStorage.setItem('statuses', JSON.stringify(statuses));
+            applyFiltersAndRender();
+        }
+
+        function addStatusSelector(person) {
+            const container = document.getElementById('statusSelectorContainer');
+            if (!container) return;
+            
+            const currentStatus = statuses[person.roll] || 'pending';
+            const statusIcons = {
+                pending: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+                contacted: '<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>',
+                submitted: '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+            };
+            
+            container.innerHTML = `
+                <button class="status-btn pending ${currentStatus === 'pending' ? 'active' : ''}" data-status="pending">${statusIcons.pending}Pending</button>
+                <button class="status-btn contacted ${currentStatus === 'contacted' ? 'active' : ''}" data-status="contacted">${statusIcons.contacted}Contacted</button>
+                <button class="status-btn submitted ${currentStatus === 'submitted' ? 'active' : ''}" data-status="submitted">${statusIcons.submitted}Submitted</button>
+            `;
+            
+            container.querySelectorAll('.status-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const newStatus = btn.getAttribute('data-status');
+                    setStatus(person.roll, newStatus);
+                    container.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+            });
+        }
+
+        // Notes Management
+        function loadNotes(person) {
+            const notesTextarea = document.getElementById('notesTextarea');
+            const followupDateInput = document.getElementById('followupDate');
+            const saveBtn = document.getElementById('saveNoteBtn');
+            
+            notesTextarea.value = notes[person.roll] || '';
+            followupDateInput.value = followupDates[person.roll] || '';
+            
+            saveBtn.onclick = () => {
+                notes[person.roll] = notesTextarea.value;
+                followupDates[person.roll] = followupDateInput.value;
+                localStorage.setItem('notes', JSON.stringify(notes));
+                localStorage.setItem('followupDates', JSON.stringify(followupDates));
+                applyFiltersAndRender();
+                saveBtn.textContent = '✓ Saved';
+                setTimeout(() => {
+                    saveBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;display:inline;vertical-align:middle;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>Save';
+                }, 2000);
+            };
+        }
+
+        // Follow-up Reminder System
+        function checkFollowUpReminders() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let overdueCount = 0;
+            let todayCount = 0;
+            
+            Object.keys(followupDates).forEach(roll => {
+                const followupDate = new Date(followupDates[roll]);
+                followupDate.setHours(0, 0, 0, 0);
+                
+                if (followupDate < today) {
+                    overdueCount++;
+                } else if (followupDate.getTime() === today.getTime()) {
+                    todayCount++;
+                }
+            });
+            
+            if (overdueCount > 0) {
+                showNotification('Overdue Follow-ups!', `You have ${overdueCount} overdue follow-up(s)`);
+            } else if (todayCount > 0) {
+                showNotification('Follow-up Reminder', `You have ${todayCount} follow-up(s) scheduled for today`);
+            }
+            
+            const contactedPending = Object.keys(statuses).filter(roll => statuses[roll] === 'contacted' && !followupDates[roll]);
+            if (contactedPending.length > 0) {
+                showNotification('Set Follow-up Dates', `${contactedPending.length} contacted student(s) need follow-up dates`);
+            }
+        }
+
+        // Check reminders every 6 hours
+        setInterval(checkFollowUpReminders, 6 * 60 * 60 * 1000);
+        
+        // Auto-refresh data every 30 minutes if online
+        setInterval(() => {
+            if (navigator.onLine && currentBatch) {
+                refreshData();
+            }
+        }, 30 * 60 * 1000);
     </script>
 </body>
 </html>
