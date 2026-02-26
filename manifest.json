@@ -1,16 +1,73 @@
 {
     "name": "ECE Placements App",
     "short_name": "ECE Directory",
-    "start_url": "./index.html",
+    "description": "Student placement directory for the ECE Department.",
+    "start_url": "/",
+    "scope": "/",
+    "dir": "ltr",
+    "lang": "en-US",
+    "orientation": "portrait",
     "display": "standalone",
+    "display_override": [
+        "standalone",
+        "minimal-ui"
+    ],
     "background_color": "#f8fafc",
     "theme_color": "#3b82f6",
-    "description": "Student placement directory for ECE Dept.",
+    "categories": [
+        "education",
+        "productivity",
+        "utilities"
+    ],
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "shortcuts": [
+        {
+            "name": "Search Directory",
+            "short_name": "Search",
+            "description": "Quickly search for a student",
+            "url": "/",
+            "icons": [
+                {
+                    "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        }
+    ],
+    "edge_side_panel": {
+        "preferred_width": 400
+    },
     "icons": [
         {
             "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "https://via.placeholder.com/1080x1920.png?text=ECE+Directory+App",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Home Screen"
+        },
+        {
+            "src": "https://via.placeholder.com/1080x1920.png?text=Search+and+Contact",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Search Directory"
+        },
+        {
+            "src": "https://via.placeholder.com/1920x1080.png?text=Desktop+View",
+            "sizes": "1920x1080",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Desktop View"
         }
     ]
 }
