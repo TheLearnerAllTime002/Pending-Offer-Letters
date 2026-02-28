@@ -831,6 +831,16 @@
                     </div>
                 </div>
                 
+                <div class="detail-row" id="emailContainer" style="display: block;">
+                    <span class="detail-label">Email Address</span>
+                    <div class="value-copy-group">
+                        <span class="detail-value" id="modalEmail" style="word-break: break-all; font-size: 0.95em;"></span>
+                        <button class="copy-btn" id="copyEmailBtn" title="Copy Email">
+                            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="detail-row phone-row" id="phone1Container">
                     <div class="phone-info">
                         <span class="detail-label">Mobile 1</span>
@@ -911,7 +921,8 @@
                     roll: parts[1] ? parts[1].trim() : '', 
                     phone1: parts[2] ? parts[2].trim() : '', 
                     phone2: parts[3] ? parts[3].trim() : '', 
-                    org: parts[4] ? parts[4].trim() : '' 
+                    org: parts[4] ? parts[4].trim() : '',
+                    email: parts[5] ? parts[5].trim() : '' 
                 });
             }
             return data;
@@ -1107,6 +1118,7 @@
         document.getElementById('copyRollBtn').onclick = () => copyToClipboard(document.getElementById('modalRoll').textContent, document.getElementById('copyRollBtn'));
         document.getElementById('copyPhone1Btn').onclick = () => copyToClipboard(document.getElementById('modalPhone1').textContent, document.getElementById('copyPhone1Btn'));
         document.getElementById('copyPhone2Btn').onclick = () => copyToClipboard(document.getElementById('modalPhone2').textContent, document.getElementById('copyPhone2Btn'));
+        document.getElementById('copyEmailBtn').onclick = () => copyToClipboard(document.getElementById('modalEmail').textContent, document.getElementById('copyEmailBtn'));
 
         // Event Listeners for Filters
         searchInput.addEventListener('input', applyFiltersAndRender);
@@ -1210,6 +1222,14 @@
                 phone2Container.style.display = 'flex';
             } else {
                 phone2Container.style.display = 'none';
+            }
+
+            const emailContainer = document.getElementById('emailContainer');
+            if (person.email && person.email.trim() !== '') {
+                document.getElementById('modalEmail').textContent = person.email;
+                emailContainer.style.display = 'flex';
+            } else {
+                emailContainer.style.display = 'none';
             }
 
             modalOverlay.classList.add('active');
